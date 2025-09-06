@@ -41,7 +41,7 @@ An **interactive web application** that teaches financial concepts through **gam
 
 | 🏠 Home Page | 🎮 Quiz Page | 📊 Progress Page |
 |--------------|-------------|------------------|
-| ![Home](https://via.placeholder.com/250x150?text=Home+Page) | ![Quiz](https://via.placeholder.com/250x150?text=Quiz+Page) | ![Progress](https://via.placeholder.com/250x150?text=Progress+Page) |
+| ![Home]C:\Users\SREYA MAXWEL\BitnBuild\Home Page.png| ![Quiz]C:\Users\SREYA MAXWEL\BitnBuild\Quiz.png | ![Progress]C:\Users\SREYA MAXWEL\BitnBuild\Progress.png |
 
 ---
 
@@ -56,5 +56,5 @@ An **interactive web application** that teaches financial concepts through **gam
 ## 🚀 Quick Start
 Clone and run locally:
 ```bash
-git clone https://github.com/<your-username>/money-mate.git
+git clone https://github.com/SreyaMaxwel/BitnBuild
 cd money-mate
