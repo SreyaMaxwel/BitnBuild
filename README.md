@@ -50,7 +50,7 @@ An **interactive web application** that teaches financial concepts through **gam
 - **Janaki R** – UI & Navigation (Landing, Challenges, Progress pages)  
 - **Sreya Maxwel** – Quiz Logic & Score Tracking (JavaScript)  
 - **Shadha Shareef** – Financial Scenarios & Content Creation  
-- **Saniya Jose** – Styling (CSS) & Final Integration  
+- **Saniya Jose** – Chatbot & Final Integration  
 
 ---
 
