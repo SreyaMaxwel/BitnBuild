@@ -7,6 +7,45 @@
   <link rel="stylesheet" href="style.css">
 
   <style>
+    .reopen-chat-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: transparent;
+      border: none;
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+      cursor: pointer;
+      display: none;
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      outline: none;
+      transition: box-shadow 0.2s;
+    }
+    .reopen-chat-btn:hover {
+      box-shadow: 0 6px 20px rgba(22,188,33,0.25);
+    }
+    .reopen-chat-btn img {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      margin: auto;
+      background: none;
+      box-shadow: none;
+      padding: 0;
+    }
+    .chat-container {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 9999;
+    }
     /* Chatbot floating widget */
     .chat-container {
       position: fixed;
@@ -101,7 +140,10 @@
 
   <!-- ✅ Chatbot widget -->
   <div class="chat-container">
-    <div class="chat-header">AI Finance Buddy</div>
+    <div class="chat-header" style="position:relative;">
+      AI Finance Buddy
+      <button style="position:absolute;top:8px;right:12px;background:transparent;border:none;font-size:1.3em;color:#fff;cursor:pointer;z-index:2;" onclick="closeChatbot()" title="Close">&times;</button>
+    </div>
     <div id="chatbox" class="chatbox"></div>
     <div class="input-container">
       <input type="text" id="userInput" placeholder="Ask me about money, savings, budgeting..." />
@@ -109,7 +151,34 @@
     </div>
   </div>
 
+  <button class="reopen-chat-btn" id="reopenChatBtn" onclick="reopenChatbot()" title="Chat with AI Buddy">
+    <img src="assets/chat-bot-icon-design-robot-600nw-2476207303.webp" alt="Chatbot Icon" />
+  </button>
+
   <script>
+    function closeChatbot() {
+      document.querySelector('.chat-container').style.display = 'none';
+      document.getElementById('reopenChatBtn').style.display = 'flex';
+      localStorage.setItem('chatbotOpen', 'false');
+    }
+    function reopenChatbot() {
+      document.querySelector('.chat-container').style.display = 'flex';
+      document.getElementById('reopenChatBtn').style.display = 'none';
+      localStorage.setItem('chatbotOpen', 'true');
+    }
+
+    // On page load, restore chatbot state
+    window.addEventListener('DOMContentLoaded', function() {
+      var open = localStorage.getItem('chatbotOpen');
+      if (open === 'false') {
+        document.querySelector('.chat-container').style.display = 'none';
+        document.getElementById('reopenChatBtn').style.display = 'flex';
+      } else {
+        document.querySelector('.chat-container').style.display = 'flex';
+        document.getElementById('reopenChatBtn').style.display = 'none';
+        localStorage.setItem('chatbotOpen', 'true');
+      }
+    });
     // Same JS logic you had earlier
     let firebaseConfig;
     let conversationHistory = [];
