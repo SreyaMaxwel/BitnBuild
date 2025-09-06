@@ -5,6 +5,81 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Financial Quest</title>
   <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* Chatbot floating widget */
+    .chat-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 350px;
+      max-height: 500px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 9999;
+    }
+    .chat-header {
+      background-color: #16bc21;
+      color: white;
+      padding: 12px;
+      text-align: center;
+      font-size: 1.1em;
+      font-weight: 600;
+    }
+    .chatbox {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+    }
+    .chat-message {
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      border-radius: 12px;
+      max-width: 80%;
+    }
+    .user-message {
+      background-color: #16bc21;
+      align-self: flex-end;
+      color: white;
+    }
+    .bot-message {
+      background-color: #b4faf5;
+      align-self: flex-start;
+      color: #333;
+    }
+    .input-container {
+      display: flex;
+      padding: 8px;
+      border-top: 1px solid #ddd;
+    }
+    .input-container input {
+      flex-grow: 1;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      margin-right: 8px;
+    }
+    .input-container button {
+      background: #16bc21;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+  </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <!-- Navbar -->
@@ -23,5 +98,136 @@
     <p>Learn money skills while playing fun challenges 🚀</p>
     <a href="challenges.html" class="start-btn">Start Now</a>
   </section>
+
+  <!-- ✅ Chatbot widget -->
+  <div class="chat-container">
+    <div class="chat-header">AI Finance Buddy</div>
+    <div id="chatbox" class="chatbox"></div>
+    <div class="input-container">
+      <input type="text" id="userInput" placeholder="Ask me about money, savings, budgeting..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    // Same JS logic you had earlier
+    let firebaseConfig;
+    let conversationHistory = [];
+    let user;
+
+    async function fetchConfigs() {
+      try {
+        const firebaseResponse = await fetch('https://bitnbuild-iu0s.onrender.com/firebaseconfig');
+        firebaseConfig = await firebaseResponse.json();
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        auth.onAuthStateChanged(async (currentUser) => {
+          user = currentUser;
+          if (user) {
+            await loadChatHistory();
+            transferLocalStorageToFirestore();
+          } else {
+            loadLocalStorageHistory();
+          }
+        });
+
+        function loadLocalStorageHistory() {
+          const chatbox = document.getElementById("chatbox");
+          chatbox.innerHTML = "";
+          conversationHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+          renderChat(conversationHistory);
+        }
+
+        async function loadChatHistory() {
+          if (!user) return;
+          const chatbox = document.getElementById("chatbox");
+          chatbox.innerHTML = "";
+          conversationHistory = [];
+
+          try {
+            const chatDoc = await db.collection("chats").doc(user.uid).get();
+            if (chatDoc.exists) {
+              conversationHistory = chatDoc.data().history || [];
+              renderChat(conversationHistory);
+            }
+          } catch (error) {
+            console.error("Error loading chat history:", error);
+            chatbox.innerHTML += `<div class="chat-message bot-message"><b>Bot:</b> This is our first chat</div>`;
+          }
+        }
+
+        function renderChat(history) {
+          const chatbox = document.getElementById("chatbox");
+          chatbox.innerHTML = "";
+          history.forEach(message => {
+            const className = message.role === "user" ? "user-message" : "bot-message";
+            const sender = message.role === "user" ? "You" : "Bot";
+            chatbox.innerHTML += `<div class="chat-message ${className}"><b>${sender}:</b> ${message.parts[0].text}</div>`;
+          });
+          chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        window.sendMessage = async function () {
+          let userMessage = document.getElementById("userInput").value.trim();
+          if (!userMessage) return;
+
+          const chatbox = document.getElementById("chatbox");
+          chatbox.innerHTML += `<div class="chat-message user-message"><b>You:</b> ${userMessage}</div>`;
+          document.getElementById("userInput").value = "";
+
+          conversationHistory.push({ role: "user", parts: [{ text: userMessage }] });
+
+          const systemMessage = `You are a friendly AI finance buddy. Answer questions about money, budgeting, savings, debt, and investments in a short, simple, beginner-friendly way.`;
+
+          try {
+            const response = await fetch('https://bitnbuild-iu0s.onrender.com/gpt4o', {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ message: `${systemMessage}\n\nUser: ${userMessage}` })
+            });
+
+            const data = await response.json();
+            const botReply = data?.reply || "I'm sorry, I don't understand.";
+
+            chatbox.innerHTML += `<div class="chat-message bot-message"><b>Bot:</b> ${botReply}</div>`;
+            conversationHistory.push({ role: "model", parts: [{ text: botReply }] });
+
+            if (user) {
+              await db.collection("chats").doc(user.uid).set({ history: conversationHistory });
+            } else {
+              localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+            }
+
+            chatbox.scrollTop = chatbox.scrollHeight;
+          } catch (error) {
+            console.error("Error:", error);
+            chatbox.innerHTML += `<div class="chat-message bot-message"><b>Bot:</b> Oops! Something went wrong.</div>`;
+          }
+        }
+
+        async function transferLocalStorageToFirestore() {
+          if (!user) return;
+          const localHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+          if (localHistory.length > 0) {
+            try {
+              await db.collection("chats").doc(user.uid).set({ history: localHistory });
+              localStorage.removeItem('chatHistory');
+            } catch (error) {
+              console.error("Error transferring chat:", error);
+            }
+          }
+        }
+
+      } catch (error) {
+        console.error('Error fetching configs:', error);
+        alert('Failed to load chatbot. Please try again later.');
+      }
+    }
+
+    fetchConfigs();
+  </script>
 </body>
 </html>
