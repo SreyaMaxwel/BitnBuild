@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Financial Literacy Game</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f6fa; color: #333; }
+    .container { display: flex; height: 100vh; }
+    .sidebar { width: 250px; background: #2c3e50; color: white; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .sidebar h2 { margin-bottom: 10px; }
+    .sidebar button { margin-top: auto; padding: 10px; background: #e74c3c; border: none; color: white; cursor: pointer; border-radius: 5px; }
+    .sidebar button:hover { background: #c0392b; }
+    .main { flex: 1; padding: 30px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+    #choices button { display: block; margin: 10px 0; padding: 12px; border: none; background: #3498db; color: white; border-radius: 6px; cursor: pointer; font-size: 15px; transition: background 0.3s; }
+    #choices button:hover { background: #2980b9; }
+    #explanation { margin-top: 20px; padding: 15px; background: #ecf0f1; border-left: 5px solid #3498db; border-radius: 5px; line-height: 1.4; }
+    .hidden { display: none; }
+    .card { background: white; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); padding: 20px; margin-top: 10px; }
+    .card canvas { max-height: 220px; height: 220px !important; width: 100% !important; }
+    #nextBtn { margin-top: 20px; padding: 12px 18px; background: #27ae60; border: none; color: white; font-size: 16px; border-radius: 6px; cursor: pointer; align-self: flex-start; display: none; transition: background 0.3s; }
+    #nextBtn:hover { background: #1e8449; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <h2>💰 Stats</h2>
+      <p>Cash: <span id="cash">$2000</span></p>
+      <p>Savings: <span id="savings">$500</span></p>
+      <p>Debt: <span id="debt">$0</span></p>
+      <p>Investments: <span id="investments">$0</span></p>
+      <button id="endBtn">End Game</button>
+    </div>
+
+    <div class="main">
+      <!-- Scenario card -->
+      <div class="card" id="scenarioCard">
+        <h1 id="scenario-title">Loading...</h1>
+        <p id="scenario-desc"></p>
+        <div id="choices"></div>
+        <div id="explanation" class="hidden"></div>
+        <button id="nextBtn">➡ Next Scenario</button>
+      </div>
+
+      <!-- Budget trend card -->
+      <div class="card">
+        <h3>📈 Budget Trend</h3>
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  let scenarios = [
+    {
+    "text": "You need a laptop for college. Do you:",
+    "options": [
+      {
+        "choice": "Pay from savings (preserve credit)",
+        "effect": { "savings": -600 },
+        "explanation": "You spent from savings. No debt, but less financial cushion.",
+        "comparison": "Credit card use would add debt and interest but preserve savings."
+      },
+      {
+        "choice": "Put on credit card (keep savings intact)",
+        "effect": { "debt": 600 },
+        "explanation": "You put it on credit. Savings safe, but debt grows with interest.",
+        "comparison": "Savings payment would avoid interest but reduce your safety net."
+      }
+    ]
+  },
+  {
+    "text": "You receive your first salary. Do you:",
+    "options": [
+      {
+        "choice": "Save 20% and spend the rest",
+        "effect": { "savings": 400, "cash": 200 },
+        "explanation": "Consistent saving builds long-term security.",
+        "comparison": "Spending all might feel good now but leaves no buffer."
+      },
+      {
+        "choice": "Spend it all on lifestyle",
+        "effect": { "cash": 500 },
+        "explanation": "You enjoy the present but sacrifice long-term stability.",
+        "comparison": "Saving part builds discipline and financial security."
+      }
+    ]
+  },
+  {
+    "text": "Your friend offers a quick-return scheme. Do you:",
+    "options": [
+      {
+        "choice": "Invest cautiously in mutual funds",
+        "effect": { "investments": 300, "cash": -300 },
+        "explanation": "You pick safer investments with steady growth.",
+        "comparison": "Risky schemes may collapse, losing your capital."
+      },
+      {
+        "choice": "Put money into friend's scheme",
+        "effect": { "investments": -200, "cash": -300 },
+        "explanation": "The scheme fails, and you lose money.",
+        "comparison": "Safer funds would have steadily grown your money."
+      }
+    ]
+  },
+  {
+    "text": "An emergency medical bill arises ($400). Do you:",
+    "options": [
+      {
+        "choice": "Use savings",
+        "effect": { "savings": -400 },
+        "explanation": "You manage without debt but reduce your buffer.",
+        "comparison": "Using credit adds future debt burden."
+      },
+      {
+        "choice": "Swipe credit card",
+        "effect": { "debt": 400 },
+        "explanation": "Immediate relief, but interest builds over time.",
+        "comparison": "Savings would have avoided interest costs."
+      }
+    ]
+  },
+  {
+    "text": "Your company offers a retirement plan match. Do you:",
+    "options": [
+      {
+        "choice": "Enroll and invest part of your salary",
+        "effect": { "investments": 500, "cash": -200 },
+        "explanation": "Employer contributions double your savings long-term.",
+        "comparison": "Skipping it means missing free money and compounding."
+      },
+      {
+        "choice": "Skip and keep all your cash now",
+        "effect": { "cash": 200 },
+        "explanation": "You have more spending power now but no retirement growth.",
+        "comparison": "Investing early would have multiplied your money."
+      }
+    ]
+  },
+  {
+    "text": "You are offered a credit card upgrade with higher limit. Do you:",
+    "options": [
+      {
+        "choice": "Decline and stick with existing card",
+        "effect": {},
+        "explanation": "You avoid the temptation to overspend.",
+        "comparison": "Higher limit could help in emergencies but may create more debt."
+      },
+      {
+        "choice": "Accept and upgrade",
+        "effect": {},
+        "explanation": "You gain flexibility but risk overspending.",
+        "comparison": "Declining avoids temptation and keeps debt lower."
+      }
+    ]
+  },
+  {
+    "text": "You need transportation to work. Do you:",
+    "options": [
+      {
+        "choice": "Buy a used car with savings",
+        "effect": { "savings": -1000 },
+        "explanation": "Upfront cost is high but no debt. Reliable transport.",
+        "comparison": "Loan spreads payment but increases long-term cost."
+      },
+      {
+        "choice": "Take a car loan",
+        "effect": { "debt": 1000, "cash": 500 },
+        "explanation": "You keep savings intact but add long-term debt.",
+        "comparison": "Paying upfront avoids interest but reduces liquidity."
+      }
+    ]
+  },
+  {
+    "text": "Your phone breaks. Do you:",
+    "options": [
+      {
+        "choice": "Buy a budget replacement",
+        "effect": { "cash": -200 },
+        "explanation": "Practical choice, keeps expenses low.",
+        "comparison": "Expensive phone may strain your finances."
+      },
+      {
+        "choice": "Buy the latest flagship on EMI",
+        "effect": { "debt": 1000 },
+        "explanation": "You get luxury now but commit to long payments.",
+        "comparison": "Cheaper phone would save money for essentials."
+      }
+    ]
+  },
+  {
+    "text": "Your friend invites you on an international trip ($1000). Do you:",
+    "options": [
+      {
+        "choice": "Save for the trip later",
+        "effect": { "savings": 200 },
+        "explanation": "You prioritize stability while planning responsibly.",
+        "comparison": "Immediate trip means debt or depleted savings."
+      },
+      {
+        "choice": "Put trip on credit",
+        "effect": { "debt": 1000 },
+        "explanation": "You enjoy now but struggle later with repayment.",
+        "comparison": "Waiting builds discipline and avoids high interest."
+      }
+    ]
+  },
+  {
+    "text": "A side hustle opportunity appears. Do you:",
+    "options": [
+      {
+        "choice": "Take it and earn extra $300 monthly",
+        "effect": { "cash": 300 },
+        "explanation": "You diversify income and build stronger finances.",
+        "comparison": "Skipping side hustle limits your growth potential."
+      },
+      {
+        "choice": "Focus only on main job",
+        "effect": {},
+        "explanation": "You reduce stress but miss extra earnings.",
+        "comparison": "Extra income would strengthen your savings."
+      }
+    ]
+  },
+  {
+    "text": "You are offered health insurance at work. Do you:",
+    "options": [
+      {
+        "choice": "Sign up and pay monthly premium",
+        "effect": { "cash": -100 },
+        "explanation": "Protection against emergencies saves money long-term.",
+        "comparison": "Skipping it could cause huge costs later."
+      },
+      {
+        "choice": "Skip and keep cash now",
+        "effect": { "cash": 100 },
+        "explanation": "You save in the short run but risk financial disaster.",
+        "comparison": "Insurance cushions unexpected medical costs."
+      }
+    ]
+  },
+  {
+    "text": "You win a $500 bonus. Do you:",
+    "options": [
+      {
+        "choice": "Invest it",
+        "effect": { "investments": 500 },
+        "explanation": "The bonus grows long-term.",
+        "comparison": "Spending it gives only short-lived joy."
+      },
+      {
+        "choice": "Spend it all on shopping",
+        "effect": { "cash": -500 },
+        "explanation": "You enjoy now but lose growth potential.",
+        "comparison": "Investing would have multiplied the reward."
+      }
+    ]
+  },
+  {
+    "text": "You are tempted by online shopping discounts. Do you:",
+    "options": [
+      {
+        "choice": "Stick to your budget",
+        "effect": { "cash": 0 },
+        "explanation": "You avoid overspending and keep savings safe.",
+        "comparison": "Impulsive buying drains your financial stability."
+      },
+      {
+        "choice": "Buy unnecessary items",
+        "effect": { "cash": -200 },
+        "explanation": "You feel good short-term but regret later.",
+        "comparison": "Budget discipline would have kept finances healthier."
+      }
+    ]
+  },
+  {
+    "text": "Rent is increasing. Do you:",
+    "options": [
+      {
+        "choice": "Move to a smaller place",
+        "effect": { "cash": 200 },
+        "explanation": "You cut expenses and save more.",
+        "comparison": "Staying means higher monthly costs."
+      },
+      {
+        "choice": "Stay in current apartment",
+        "effect": { "cash": -200 },
+        "explanation": "You keep comfort but strain your budget.",
+        "comparison": "Downsizing improves financial freedom."
+      }
+    ]
+  },
+  {
+    "text": "You have $1000 extra. Do you:",
+    "options": [
+      {
+        "choice": "Pay off debt first",
+        "effect": { "debt": -1000 },
+        "explanation": "Debt-free status saves interest and stress.",
+        "comparison": "Investing while in debt means losing to interest payments."
+      },
+      {
+        "choice": "Invest it all",
+        "effect": { "investments": 1000 },
+        "explanation": "You build wealth but debt interest keeps growing.",
+        "comparison": "Clearing debt would improve net worth more safely."
+      }
+    ]
+  }
+  ];
+
+  let current = 0;
+  let stats = { cash: 2000, savings: 500, debt: 0, investments: 0 };
+  let trendChart, finalChart;
+
+  initTrendChart();
+  showScenario();
+
+  function showScenario() {
+    const s = scenarios[current];
+    document.getElementById("scenario-title").textContent = "Scenario " + (current + 1);
+    document.getElementById("scenario-desc").textContent = s.text;
+    document.getElementById("choices").innerHTML = "";
+
+    s.options.forEach((opt, i) => {
+      const btn = document.createElement("button");
+      btn.textContent = opt.choice;
+      btn.onclick = () => chooseOption(opt, i, s.options);
+      document.getElementById("choices").appendChild(btn);
+    });
+
+    document.getElementById("explanation").classList.add("hidden");
+    document.getElementById("nextBtn").style.display = "none";
+  }
+
+  function chooseOption(opt, index, allOptions) {
+    const effects = opt.effect || {};
+
+    stats.cash += effects.cash ?? 0;
+    stats.savings += effects.savings ?? 0;
+    stats.debt += effects.debt ?? 0;
+    stats.investments += effects.investments ?? 0;
+
+    updateStats();
+    updateTrendChart();
+
+    let other = allOptions.find((_, i) => i !== index);
+    let comparison = other ? `💡 If you had chosen "${other.choice}", ${other.comparison}` : "";
+
+    document.getElementById("explanation").innerHTML = `
+      <strong>✅ You chose:</strong> ${opt.choice}<br><br>
+      ${opt.explanation}<br><br>
+      <em>${comparison}</em>
+    `;
+    document.getElementById("explanation").classList.remove("hidden");
+
+    document.querySelectorAll("#choices button").forEach((btn) => (btn.disabled = true));
+    document.getElementById("nextBtn").style.display = "inline-block";
+  }
+
+  function updateStats() {
+    document.getElementById("cash").textContent = "$" + stats.cash;
+    document.getElementById("savings").textContent = "$" + stats.savings;
+    document.getElementById("debt").textContent = "$" + stats.debt;
+    document.getElementById("investments").textContent = "$" + stats.investments;
+  }
+
+  document.getElementById("nextBtn").addEventListener("click", () => {
+    current++;
+    if (current < scenarios.length) {
+      showScenario();
+    } else {
+      showFinalReport();
+    }
+  });
+
+  document.getElementById("endBtn").addEventListener("click", () => {
+    showFinalReport(true);
+  });
+
+  function initTrendChart() {
+    const ctx = document.getElementById("trendChart").getContext("2d");
+    trendChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [
+          { label: "Cash", data: [], borderColor: "#3498db", fill: false },
+          { label: "Savings", data: [], borderColor: "#2ecc71", fill: false },
+          { label: "Debt", data: [], borderColor: "#e74c3c", fill: false },
+          { label: "Investments", data: [], borderColor: "#9b59b6", fill: false }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom" } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+
+  function updateTrendChart() {
+    trendChart.data.labels.push("Q" + (current + 1));
+    trendChart.data.datasets[0].data.push(stats.cash);
+    trendChart.data.datasets[1].data.push(stats.savings);
+    trendChart.data.datasets[2].data.push(stats.debt);
+    trendChart.data.datasets[3].data.push(stats.investments);
+    trendChart.update();
+  }
+
+  function showFinalReport(endedEarly = false) {
+    let strengths = [];
+    let weaknesses = [];
+
+    if (stats.savings > 1000) strengths.push("Good savings habit 💵");
+    else weaknesses.push("Low savings cushion 🚨");
+
+    if (stats.debt <= 0) strengths.push("Debt-free lifestyle ✅");
+    else weaknesses.push("High debt may cause stress 💳");
+
+    if (stats.investments > 500) strengths.push("Smart investor 📈");
+    else weaknesses.push("Missed chances for wealth growth 📉");
+
+    if (stats.cash > 1000) strengths.push("Healthy cash flow 💰");
+    else weaknesses.push("Low liquidity for emergencies ⚠️");
+
+    document.querySelector(".main").innerHTML = `
+      <h1>${endedEarly ? "🚪 Challenge Ended Early" : "🎉 Challenge Completed!"}</h1>
+      <div class="card">
+        <h3>Final Financial Report</h3>
+        <p><strong>Cash:</strong> $${stats.cash}</p>
+        <p><strong>Savings:</strong> $${stats.savings}</p>
+        <p><strong>Debt:</strong> $${stats.debt}</p>
+        <p><strong>Investments:</strong> $${stats.investments}</p>
+        <canvas id="finalChart"></canvas>
+      </div>
+      <div class="card">
+        <h3>💪 Strengths</h3>
+        <ul>${strengths.map(s => `<li>${s}</li>`).join("") || "<li>None</li>"}</ul>
+      </div>
+      <div class="card">
+        <h3>⚠️ Weaknesses</h3>
+        <ul>${weaknesses.map(w => `<li>${w}</li>`).join("") || "<li>None</li>"}</ul>
+      </div>
+    `;
+    renderFinalChart();
+  }
+
+  function renderFinalChart() {
+    const ctx = document.getElementById("finalChart").getContext("2d");
+    finalChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: ["Cash", "Savings", "Debt", "Investments"],
+        datasets: [
+          {
+            data: [stats.cash, stats.savings, stats.debt, stats.investments],
+            backgroundColor: ["#3498db", "#2ecc71", "#e74c3c", "#9b59b6"]
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+  </script>
+</body>
+</html>
