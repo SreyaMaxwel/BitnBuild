@@ -1,9 +1,10 @@
+<!-- lessons.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Challenges - Money Mate</title>
+  <title>Lessons - Money Mate</title>
   <link rel="stylesheet" href="style.css">
   <style>
     body {
@@ -55,17 +56,17 @@
     }
 
     .card-container {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr); /* 2 cards per row */
-      gap: 2rem;
-      padding: 0 2rem;
-    }
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 cards per row */
+  gap: 2rem;
+  padding: 0 2rem;
+}
 
-    @media (max-width: 768px) {
-      .card-container {
-        grid-template-columns: 1fr; /* stack cards on small screens */
-      }
-    }
+@media (max-width: 768px) {
+  .card-container {
+    grid-template-columns: 1fr; /* stack cards on small screens */
+  }
+}
 
 
     /* Card Styles */
@@ -121,36 +122,36 @@
     <div class="logo">💸 Money Mate</div>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
-      <li><a href="challenges.html" class="active">Challenges</a></li>
-      <li><a href="lessons.html">Lessons</a></li>
+      <li><a href="challenges.html">Challenges</a></li>
+      <li><a href="lessons.html" class="active">Lessons</a></li>
       <li><a href="progress.html">Progress</a></li>
       <li><a href="simulation.html">Simulation</a></li>
     </ul>
   </nav>
 
-  <!-- Challenges Section -->
+  <!-- Lessons Section -->
   <section class="challenges">
-    <h1>🔥 Choose Your Challenge</h1>
+    <h1>📚 Choose Your Lesson</h1>
     <div class="card-container">
       <div class="card">
         <h2>📊 Budgeting</h2>
         <p>Learn how to balance income and expenses wisely.</p>
-        <a href="quiz.html" class="card-btn">Start</a>
+        <a href="budgeting.html" class="card-btn">Start</a>
       </div>
       <div class="card">
         <h2>💳 Debt</h2>
         <p>Understand loans and master debt management.</p>
-        <a href="quiz.html" class="card-btn">Start</a>
+        <a href="debt.html" class="card-btn">Start</a>
       </div>
       <div class="card">
         <h2>💰 Saving</h2>
         <p>Discover how small, consistent savings grow over time.</p>
-        <a href="quiz.html" class="card-btn">Start</a>
+        <a href="saving.html" class="card-btn">Start</a>
       </div>
       <div class="card">
         <h2>📈 Investing</h2>
         <p>See how smart investments build long-term wealth.</p>
-        <a href="quiz.html" class="card-btn">Start</a>
+        <a href="investing.html" class="card-btn">Start</a>
       </div>
     </div>
   </section>
