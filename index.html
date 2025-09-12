@@ -106,13 +106,41 @@
       margin-right: 8px;
     }
     .input-container button {
-      background: #16bc21;
+      background: #4CAF50; /* Bright green like in image */
       color: white;
       border: none;
       padding: 8px 12px;
       border-radius: 20px;
       cursor: pointer;
     }
+/* ...your existing styles... */
+
+/* ADD THIS AT THE END */
+    @media (max-width: 768px) {
+  .chat-container {
+    width: 90%;
+    right: 5%;
+    bottom: 15px;
+    max-height: 60vh;
+  }
+}
+
+  
+  .reopen-chat-btn {
+    width: 60px;
+    height: 60px;
+    right: 15px;
+    bottom: 15px;
+  }
+  
+  .reopen-chat-btn img {
+    width: 56px;
+    height: 56px;
+  }
+  .reopen-chat-btn:hover {
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.25);
+}
+
   </style>
 
   <!-- Firebase SDKs -->

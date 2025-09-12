@@ -7,19 +7,26 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <nav>
-    <a href="index.html">Home</a> |
-    <a href="challenges.html">Challenges</a> |
-    <a href="progress.html">Progress</a>
+  <!-- Replace the plain nav with this styled navbar -->
+  <nav class="navbar">
+    <div class="logo">💸 Money Mate</div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="challenges.html">Challenges</a></li>
+      <li><a href="progress.html">Progress</a></li>
+      <li><a href="simulation.html">Simulation</a></li>
+    </ul>
   </nav>
 
-  <main>
-    <h1>Financial Literacy Quiz</h1>
-    <div id="quiz-container">
-      <p id="question"></p>
-      <div id="options"></div>
-      <p id="feedback"></p>
-      <button id="next-btn" style="display:none;">Next</button>
+  <main class="quiz">
+    <div class="quiz-box">
+      <h1 id="quiz-title">Financial Literacy Quiz</h1>
+      <div id="quiz-container">
+        <p id="question"></p>
+        <div id="options"></div>
+        <p id="feedback"></p>
+        <button id="next-btn" class="next-btn" style="display:none;">Next</button>
+      </div>
     </div>
   </main>
 
